@@ -1,5 +1,6 @@
 package com.example.karolina.calculator;
 
+import android.annotation.SuppressLint;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -17,24 +18,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
-    public:
-        double firstOperand = 0;
-        double secoundOperand = 0;
-        double accumulator = 0;
-        char operator = '+';
+    private double firstOperand = 0;
+    private double secoundOperand = 0;
+    private double accumulator = 0;
+    private char operator = ' ';
 
-        String firstOperandString = "";
-        String secoundOperandString = "";
+    private String firstOperandString = "";
+    private String secoundOperandString = "";
+
+    private boolean ifFirstOperand = true;
+    private boolean ifBothOperandsSet = false;
 
     //###########   VIEW ACTIONS    ###############
-    public void refresh(View view){
+    private void refresh(boolean ifDisplayResult){
         TextView operation = (TextView) findViewById(R.id.operationTextView);
         TextView result = (TextView) findViewById(R.id.resultTextView);
-        TextView sign = (TextView) findViewById(R.id.signTextView);
 
-        operation.setText( String.valueOf(firstOperand) + " " + String.valueOf(operator) + " " + String.valueOf(secoundOperand) );
-        result.setText( String.valueOf(accumulator) );
-        sign.setText( String.valueOf(operator) );
+        operation.setText( firstOperandString + " " + String.valueOf(operator) + " " + secoundOperandString );
+
+        if(ifDisplayResult) {
+            result.setText( String.valueOf(accumulator) );
+        }
+        else{
+            result.setText("");
+        }
     }
 
 
@@ -48,66 +55,91 @@ public class MainActivity extends AppCompatActivity {
         firstOperandString = "";
         secoundOperandString = "";
 
-        refresh(view);
+        ifFirstOperand = true;
+        ifBothOperandsSet = false;
+
+        refresh(false);
     }
 
     public void undo(View view){
         if(accumulator != 0) {
             accumulator = 0;
         }
-        else if(secoundOperand != 0){
-            secoundOperand = 0;
+        else if(ifBothOperandsSet){
+            secoundOperandString = "";
+            ifBothOperandsSet = false;
+        }
+        else if(operator != ' '){
+            operator = ' ';
         }
         else{
-            firstOperand = 0;
+            firstOperandString = "";
+            ifBothOperandsSet = false;
         }
-        refresh(view);
+        refresh(false);
     }
 
     public void showResult(View view){
-        firstOperand = Double.parseDouble(firstOperandString);
-        secoundOperand = Double.parseDouble(secoundOperandString);
+        if(ifBothOperandsSet) {
+            firstOperand = Double.parseDouble(firstOperandString);
+            secoundOperand = Double.parseDouble(secoundOperandString);
 
-        switch(operator){
-            case '+':
-                accumulator = firstOperand + secoundOperand;
-                break;
+            switch (operator) {
+                case '+':
+                    accumulator = firstOperand + secoundOperand;
+                    break;
 
-            case '-':
-                accumulator = firstOperand - secoundOperand;
-                break;
+                case '-':
+                    accumulator = firstOperand - secoundOperand;
+                    break;
 
-            case '*':
-                accumulator = firstOperand * secoundOperand;
-                break;
+                case '*':
+                    accumulator = firstOperand * secoundOperand;
+                    break;
 
-            case '/':
-                accumulator = firstOperand / secoundOperand;
-                break;
+                case '/':
+                    accumulator = firstOperand / secoundOperand;
+                    break;
 
-            case '^':
-                accumulator = pow(firstOperand, secoundOperand);
-                break;
+                case '^':
+                    accumulator = pow(firstOperand, secoundOperand);
+                    break;
 
-            default:
-                accumulator = 0;
-
+                default:
+                    accumulator = 0;
+            }
+            refresh(true);
+            ifFirstOperand = true;
+            ifBothOperandsSet = false;
         }
-        refresh(view);
     }
 
     public void assignOperand(View view){
-        if(firstOperand != 0){
-            secoundOperandString += view.getTag().toString();
+        if(ifFirstOperand){
+            if(accumulator != 0){
+                allClean(view);
+            }
+            if( !view.getTag().toString().contains(".") || (view.getTag().toString().contains(".") && !firstOperandString.contains(".")) ){
+                firstOperandString += view.getTag().toString();
+            }
         }
         else{
-            firstOperandString += view.getTag().toString();
+            if( !view.getTag().toString().contains(".") || (view.getTag().toString().contains(".") && !secoundOperandString.contains(".")) ){
+                secoundOperandString += view.getTag().toString();
+            }
+            ifBothOperandsSet = true;
         }
-        refresh(view);
+        refresh(false);
     }
 
     public void assignOperator(View view){
+        if (accumulator != 0){
+            firstOperandString = String.valueOf(accumulator);
+            secoundOperandString = " ";
+            accumulator = 0;
+        }
         operator = (char) view.getTag().toString().charAt(0);
-        refresh(view);
+        ifFirstOperand = false;
+        refresh(false);
     }
 }
