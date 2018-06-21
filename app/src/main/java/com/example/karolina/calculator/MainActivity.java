@@ -18,6 +18,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
+    //########### DEFINE VARIABLES ###############
     private double firstOperand = 0;
     private double secoundOperand = 0;
     private double accumulator = 0;
@@ -26,8 +27,9 @@ public class MainActivity extends AppCompatActivity {
     private String firstOperandString = "";
     private String secoundOperandString = "";
 
-    private boolean ifFirstOperand = true;
+    private boolean ifFirstOperandSet = false;
     private boolean ifBothOperandsSet = false;
+
 
     //###########   VIEW ACTIONS    ###############
     private void refresh(boolean ifDisplayResult){
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         firstOperandString = "";
         secoundOperandString = "";
 
-        ifFirstOperand = true;
+        ifFirstOperandSet = false;
         ifBothOperandsSet = false;
 
         refresh(false);
@@ -63,23 +65,33 @@ public class MainActivity extends AppCompatActivity {
 
     public void undo(View view){
         if(accumulator != 0) {
+            // clear accumulator
             accumulator = 0;
+            ifBothOperandsSet = true;
+            ifFirstOperandSet = true;
         }
         else if(ifBothOperandsSet){
+            // clear secound operand
             secoundOperandString = "";
+            secoundOperand = 0;
             ifBothOperandsSet = false;
         }
         else if(operator != ' '){
+            // clear sign
             operator = ' ';
+            ifFirstOperandSet = false;
         }
         else{
+            // clear first operand
             firstOperandString = "";
-            ifBothOperandsSet = false;
+            firstOperand = 0;
+            ifFirstOperandSet = false;
         }
         refresh(false);
     }
 
     public void showResult(View view){
+        // calculate and show result
         if(ifBothOperandsSet) {
             firstOperand = Double.parseDouble(firstOperandString);
             secoundOperand = Double.parseDouble(secoundOperandString);
@@ -109,21 +121,23 @@ public class MainActivity extends AppCompatActivity {
                     accumulator = 0;
             }
             refresh(true);
-            ifFirstOperand = true;
-            ifBothOperandsSet = false;
+            ifFirstOperandSet = false;  // to take result as a first operand
+            ifBothOperandsSet = true;
         }
     }
 
     public void assignOperand(View view){
-        if(ifFirstOperand){
+        if(ifFirstOperandSet == false){
+            // assign to the first operand
             if(accumulator != 0){
                 allClean(view);
             }
-            if( !view.getTag().toString().contains(".") || (view.getTag().toString().contains(".") && !firstOperandString.contains(".")) ){
+            if( !view.getTag().toString().contains(".") || (view.getTag().toString().contains(".") && !firstOperandString.contains(".")) ) {
                 firstOperandString += view.getTag().toString();
             }
         }
-        else{
+        else if(operator != ' '){
+            // only if sign is set, assign to the secound operand
             if( !view.getTag().toString().contains(".") || (view.getTag().toString().contains(".") && !secoundOperandString.contains(".")) ){
                 secoundOperandString += view.getTag().toString();
             }
@@ -134,12 +148,22 @@ public class MainActivity extends AppCompatActivity {
 
     public void assignOperator(View view){
         if (accumulator != 0){
+            // assign accumulator to the first operand
             firstOperandString = String.valueOf(accumulator);
-            secoundOperandString = " ";
+            ifFirstOperandSet = true;
+            secoundOperandString = "";
             accumulator = 0;
+            ifBothOperandsSet = false;
         }
-        operator = (char) view.getTag().toString().charAt(0);
-        ifFirstOperand = false;
+        else if(!firstOperandString.isEmpty()){
+            // if anything is in the first operand allow assign a sign
+            operator = (char) view.getTag().toString().charAt(0);
+            ifFirstOperandSet = true;
+        }
+        else if(firstOperandString.isEmpty() && (char) view.getTag().toString().charAt(0) == '-'){
+            // make first operand negative number
+            firstOperandString += '-';
+        }
         refresh(false);
     }
 }
